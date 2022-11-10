@@ -131,9 +131,8 @@ EOF
 sudo sysctl --system
 
 if [ $1 == "worker" ]; then
-    tar xzvf release-v3.22.0.tgz
-    cd $cwd/release-v3.22.0/images
-    docker load -i calico-node.tar
+    cd $cwd/docker-images/calico
+    docker load -i node.v3.15.5.tar
 
     cd $cwd/docker-images/k8s.gcr.io
     docker load -i proxy.tar
@@ -144,14 +143,12 @@ fi
 #These commands should be run on masternode only
 
 if [ $1 == "master" ]; then
-    cd $cwd
+    cd $cwd/docker-images/calico
 
-    tar xzvf release-v3.22.0.tgz
-    cd ./release-v3.22.0/images
-    docker load -i calico-cni.tar
-    docker load -i calico-node.tar
-    docker load -i calico-kube-controllers.tar
-    docker load -i calico-pod2daemon.tar
+    docker load -i cni.v3.15.5.tar
+    docker load -i kube-controllers.v3.15.5.tar
+    docker load -i node.v3.15.5.tar
+    docker load -i pod2daemon-flexvol.v3.15.5.tar
 
     cd ..
     docker load -i  debian.latest.tar
@@ -182,13 +179,23 @@ if [ $1 == "master" ]; then
 
     #install calico plugin
     cd $cwd
+    tar xzvf release-v3.22.0.tgz
+    cd ./release-v3.22.0/images
+    docker load -i calico-cni.tar
+    docker load -i calico-node.tar
+    docker load -i calico-kube-controllers.tar
+    docker load -i calico-pod2daemon.tar
+
     cd ../manifests/
     kubectl apply -f calico.yaml
+
 
     #installing calicoctl
     chmod +x calicoctl
     cp calicoctl /usr/local/bin
+
     DATASTORE_TYPE=kubernetes KUBECONFIG=~/.kube/config calicoctl get nodes -o yaml
+
 
     #install multus
     #cd $HOME
